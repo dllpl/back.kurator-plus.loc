@@ -1,0 +1,229 @@
+type Query {
+    "Return the user and its related objects"
+    me: User @auth
+    "Return organizations in which the user participates"
+    relatedOrganizations: [RelatedOrganization]! @all
+    relationships: [Relationship]! @all
+    socialProviders: [SocialProvider]! @all
+    organizations(
+        slug: String @where
+        inn: String @where
+        ogrn: String @where
+        name: String @where(clause: "searchByName")
+        address: String @where(clause: "searchByAddress")
+    ): [Organization]! @paginate
+    organization(id: UUID! @eq): Organization @find
+    learningStream(id: UUID! @eq): LearningStream @find
+    users(
+        name: String @where(operator: "~*")
+        surname: String @where(operator: "~*")
+        inn: String @where
+        email: String @where
+        phone: String @where(operator: "~*")
+    ): [User]! @paginate
+    user(id: UUID! @eq): User @find
+    vacationPlans(
+        userId: UUID
+        organizationId: UUID
+        learningStreamId: UUID
+        season: ReportSeasonEnum
+    ): [VacationPlan]! @paginate
+    vacationPlan(id: UUID! @eq): VacationPlan @find
+}
+
+type VacationPlan {
+    createdAt: DateTime! @snake
+    updatedAt: DateTime! @snake
+    id: UUID!
+    user: PublicUser! @belongsTo
+    learningStream: LearningStream! @belongsTo
+    year: Int!
+    season: ReportSeasonEnum!
+    status: ReportStatusEnum!
+    data: String!
+    moderatedAt: DateTime @snake
+    moderatedBy: PublicUser @belongsTo
+    reason: String
+}
+
+enum ReportStatusEnum {
+    saved
+    sent
+    approved
+    rejected
+}
+
+enum ReportSeasonEnum {
+    winter
+    spring
+    summer
+    autumn
+}
+
+type PublicUser {
+    id: UUID!
+    name: String!
+    surname: String!
+    patronymic: String
+    email: String
+    avatar: String
+}
+
+type User {
+    createdAt: DateTime! @snake
+    updatedAt: DateTime! @snake
+    id: UUID!
+    name: String!
+    surname: String!
+    patronymic: String
+    inn: String
+    email: String
+    emailVerifiedAt: DateTime @snake
+    phone: String
+    birthDate: Date @snake
+    gender: GenderEnum
+    avatar: String
+    fillFactor: Float
+    superuser: Boolean
+    "Return Organizations in which the user participates"
+    relatedOrganizations: [RelatedOrganization]! @hasMany
+    socialAccounts: [SocialAccount]!
+    myUsers(
+        myRelationship: RelationshipEnum!
+        organizationId: UUID!
+        learningStreamId: UUID
+        usersRelationships: [RelationshipEnum]
+        fio: String
+    ): [User]! @paginate(builder: "App\\GraphQL\\Queries\\MyUsers")
+}
+
+enum GenderEnum {
+    male
+    female
+}
+
+type LearningStream {
+    createdAt: DateTime! @snake
+    updatedAt: DateTime! @snake
+    id: UUID!
+    name: String!
+    year: Int!
+    years: Int
+    startedAt: Date
+    endedAt: Date
+    leaders: [PublicUser]!
+    students: [PublicUser]!
+}
+
+enum OrganizationTypeEnum {
+    governing @enum(value: 1)
+    educational @enum(value: 2)
+}
+
+type OrganizationType {
+    slug: String!
+    name: String!
+}
+
+type Organization {
+    createdAt: DateTime! @snake
+    updatedAt: DateTime! @snake
+    id: UUID!
+    parent: Organization @belongsTo
+    children: [Organization]! @hasMany(type: "paginator")
+    changes: [OrganizationChange]! @hasMany(type: "paginator")
+    type: OrganizationType @belongsTo
+
+    relatedUsers(relationship: RelationshipEnum @where(key: "relationship_id")): [RelatedUser]! @hasMany(type: "paginator")
+    learningStreams: [LearningStream]! @hasMany(type: "paginator")
+
+    slug: String!
+    name: String!
+    description: String
+    shortName: String @snake
+    address: String
+    phone: String
+    inn: String
+    ogrn: String
+    deletedDue: String @snake
+}
+
+type OrganizationChange {
+    createdAt: DateTime! @snake
+    updatedAt: DateTime! @snake
+    id: UUID!
+    parent: OrganizationChange @belongsTo
+    children: [OrganizationChange]! @hasMany(type: "paginator")
+    organization: Organization @belongsTo
+
+    name: String!
+    shortName: String @snake
+    address: String
+    phone: String
+    inn: String
+    ogrn: String
+    deletedDue: String @snake
+}
+
+enum RelationshipEnum {
+    director @enum(value: 1)
+    secretary @enum(value: 2)
+    head_teacher @enum(value: 3)
+    stream_leader @enum(value: 4)
+    teacher @enum(value: 5)
+    psychologist @enum(value: 6)
+    student @enum(value: 7)
+    parent @enum(value: 8)
+    deputy_director_academy @enum(value: 9)
+    deputy_director_education @enum(value: 10)
+    deputy_director_methodology @enum(value: 11)
+    deputy_director_supply @enum(value: 12)
+}
+
+type Relationship {
+#    createdAt: DateTime! @snake
+#    updatedAt: DateTime! @snake
+#    id: Int!
+    slug: String!
+    name: String!
+#    relatedOrganizations: [RelatedOrganization]! @hasMany(type: "paginator")
+}
+
+type RelatedOrganization {
+    createdAt: DateTime! @snake
+    updatedAt: DateTime! @snake
+    loggedAt: DateTime @snake
+    id: UUID!
+    organization: Organization! @belongsTo
+    relationship: Relationship! @belongsTo
+}
+
+type RelatedUser {
+    createdAt: DateTime! @snake
+    updatedAt: DateTime! @snake
+    loggedAt: DateTime @snake
+    id: UUID!
+    user: PublicUser! @belongsTo
+    relationship: Relationship! @belongsTo
+}
+
+type SocialAccount {
+    createdAt: DateTime! @snake
+    updatedAt: DateTime! @snake
+    id: UUID!
+    user: User! @belongsTo
+    provider: SocialProvider! @belongsTo
+    providerUser: String! @snake
+    name: String!
+    email: String
+}
+
+type SocialProvider {
+#    createdAt: DateTime! @snake
+#    updatedAt: DateTime! @snake
+#    id: Int!
+    slug: String!
+    name: String!
+    driver: String!
+    class: String
+}

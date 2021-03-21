@@ -1,0 +1,10 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-01-01 13:00:00`."
+scalar DateTime
+
+"A date string with format `Y-m-d`, e.g. `2011-05-23`."
+scalar Date
+
+"A universally unique identifier (`UUID`), e.g. `123e4567-e89b-42d3-a456-426655440000`."
+scalar UUID
+
+scalar Mixed

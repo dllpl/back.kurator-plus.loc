@@ -1,0 +1,178 @@
+#type Response {
+#    status: String!
+#    message: String
+#}
+
+input Profile {
+    name: String
+    surname: String
+    patronymic: String
+    inn: String
+    email: String
+    phone: String
+    birthDate: Date
+    gender: GenderEnum
+}
+
+input UserData {
+    name: String!
+    surname: String!
+    patronymic: String
+    inn: String
+    email: String
+    phone: String
+    password: String
+    birthDate: Date
+    gender: GenderEnum
+}
+
+input OrganizationData {
+    slug: String
+    name: String
+    description: String
+    shortName: String @snake
+    address: String
+    phone: String
+    inn: String
+    ogrn: String
+    type: OrganizationTypeEnum
+}
+
+input LearningStreamData {
+    organizationId: UUID! @snake
+    name: String!
+    year: Int!
+    years: Int
+    startedAt: Date @snake
+}
+
+input RelationData {
+    organizationId: UUID! @snake
+    relationship: RelationshipEnum!
+    userId: UUID! @snake
+    date: Date
+}
+
+input StreamRelationData {
+    learningStreamId: UUID! @snake
+    userId: UUID! @snake
+    date: Date
+    acting: Boolean
+}
+
+input Password {
+    password: String!
+}
+
+input ReasonData {
+    reason: String!
+}
+
+input ReportVacationPlanData {
+    learningStreamId: UUID! @snake
+    year: Int!
+    season: ReportSeasonEnum!
+    data: String!
+}
+
+type Mutation {
+    # Current user related
+    logout: Boolean!
+    updateProfile(
+        input: Profile!
+    ): User!
+    changePassword(
+        currentPassword: String!
+        input: Password!
+    ): User!
+    unlinkSocialAccount(
+        id: UUID!
+    ): Boolean!
+
+    # User related
+    createUser(
+        input: UserData!
+    ): User!
+    updateUser(
+        id: UUID!
+        input: UserData!
+    ): User!
+    deleteUser(
+        id: UUID!
+    ): Boolean!
+    linkUserToOrganization(
+        input: RelationData!
+    ): RelatedOrganization
+    unlinkUserFromOrganization(
+        id: UUID!
+    ): Boolean!
+
+    # Organization related
+    createOrganization(
+        input: OrganizationData!
+    ): Organization!
+    updateOrganization(
+        id: UUID!
+        input: OrganizationData!
+    ): Organization!
+    deleteOrganization(
+        id: UUID!
+    ): Boolean!
+
+    # LearningStream related
+    createLearningStream(
+        input: LearningStreamData!
+    ): LearningStream!
+    updateLearningStream(
+        id: UUID!
+        input: LearningStreamData!
+    ): LearningStream!
+    deleteLearningStream(
+        id: UUID!
+    ): Boolean!
+
+    # Student related
+    linkStudentToStream(
+        input: StreamRelationData!
+    ): RelatedOrganization
+    unlinkStudentFromStream(
+        userId: UUID! @snake
+        learningStreamId: UUID! @snake
+    ): Boolean!
+    moveStudents(
+        targetStreamId: UUID!
+        sourceStreamId: UUID!
+        onlyUsers: [UUID]
+    ): Boolean
+
+    # Teacher related
+    linkLeaderToStream(
+        input: StreamRelationData!
+    ): RelatedOrganization
+    unlinkLeaderFromStream(
+        userId: UUID! @snake
+        learningStreamId: UUID! @snake
+    ): Boolean!
+
+    # Report related
+    createVacationPlan(
+        input: ReportVacationPlanData!
+    ): VacationPlan!
+    updateVacationPlan(
+        id: UUID!
+        input: ReportVacationPlanData!
+    ): VacationPlan!
+    sendVacationPlan(
+        id: UUID!
+    ): VacationPlan!
+    approveVacationPlan(
+        id: UUID!
+    ): VacationPlan!
+    rejectVacationPlan(
+        id: UUID!
+        input: ReasonData!
+    ): VacationPlan!
+    deleteVacationPlan(
+        id: UUID!
+    ): Boolean!
+}
